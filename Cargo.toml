@@ -1,0 +1,14 @@
+[package]
+name = "jam"
+version = "0.1.0"
+authors = ["Cary Haynie <cary.haynie@gmail.com>"]
+build = "build.rs"
+
+[build-dependencies]
+lalrpop = "0.13.1"
+
+[dependencies]
+jam_depgraph = { path = "depgraph" }
+lalrpop-util = "0.13.1"
+nom = "^2.1"
+regex = "0.2.1"

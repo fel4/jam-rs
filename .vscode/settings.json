@@ -1,0 +1,14 @@
+// Place your settings in this file to overwrite default and user settings.
+{
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/CVS": true,
+        "**/.DS_Store": true,
+        // generated from lalrpop grammars.
+        "src/calculator1.rs": true,
+        "src/lang/grammar.rs": true,
+        "src/lang/grammar2.rs": true
+    }
+}

@@ -1,0 +1,1 @@
+pub fn data() -> &'static [u8] { include_bytes!("../Jambase") }

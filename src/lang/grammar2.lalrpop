@@ -1,0 +1,74 @@
+use lexer::{LexerError, Token};
+use super::ast;
+use super::compiler;
+
+grammar;
+
+pub rule: () = {
+    "rule" <"Ident"> "{" block "}" => compiler::saw_rule(<>)
+};
+
+pub block: () = {
+    statement*
+};
+
+pub statement: () = {
+    <l:"local"?> <n:"Ident"> ";" => compiler::saw_assignment(ast::AssignmentExpr{local: l.is_some(), name: n, value: None}),
+    <l:"local"?> <n:"Ident"> "=" <v:"Ident"> ";" => compiler::saw_assignment(ast::AssignmentExpr{local: l.is_some(), name: n, value: Some(v)}),
+};
+
+extern {
+    type Location = usize;
+    type Error = LexerError;
+
+    enum Token {
+        "!" => Token::Bang,
+        "!=" => Token::BangEquals,
+        "&" => Token::Amper,
+        "&&" => Token::AmperAmper,
+        "(" => Token::LeftParen,
+        ")" => Token::RightParen,
+        "+=" => Token::PlusEquals,
+        ":" => Token::Colon,
+        ";" => Token::SemiColon,
+        "<" => Token::LeftAngle,
+        "<=" => Token::LeftAngleEquals,
+        "=" => Token::Equals,
+        ">" => Token::RightAngle,
+        ">=" => Token::RightAngleEquals,
+        "?=" => Token::QuestionEquals,
+        "[" => Token::LeftBrace,
+        "]" => Token::RightBrace,
+        "|" => Token::Bar,
+        "||" => Token::BarBar,
+        "{" => Token::LeftBracket,
+        "}" => Token::RightBracket,
+        "actions" => Token::Actions,
+        "ActionString" => Token::ActionString(<String>),
+        "bind" => Token::Bind,
+        "break" => Token::Break,
+        "case" => Token::Case,
+        "continue" => Token::Continue,
+        "default" => Token::Default,
+        "else" => Token::Else,
+        "existing" => Token::Existing,
+        "for" => Token::For,
+        "Ident" => Token::Ident(<String>),
+        "if" => Token::If,
+        "ignore" => Token::Ignore,
+        "in" => Token::In,
+        "include" => Token::Include,
+        "local" => Token::Local,
+        "maxline" => Token::Maxline,
+        "on" => Token::On,
+        "piecemeal" => Token::Piecemeal,
+        "quietly" => Token::Quietly,
+        "return" => Token::Return,
+        "rule" => Token::Rule,
+        "StringLiteral" => Token::StringLiteral(<String>),
+        "switch" => Token::Switch,
+        "together" => Token::Together,
+        "updated" => Token::Updated,
+        "while" => Token::While,
+    }
+}

@@ -1,0 +1,216 @@
+use std::str;
+use std::str::FromStr;
+
+use action;
+use lexer::{LexerError, Token};
+
+use super::ast;
+
+grammar;
+
+pub run: () = {
+    rules?,
+};
+
+block: () = {
+    rules?,
+};
+
+rules: () = {
+    rule,
+    "local" list ";" block,
+    "local" list "=" list ";",
+};
+
+rule: () = {
+    "{" block "}",
+    "include" list ";",
+    arg lol ";",
+    arg assign list ";",
+    arg "on" list assign list ";",
+    "break" list ";",
+    "continue" list ";",
+    "return" list ";",
+    "for" "Ident" "in" list "{" block "}",
+    "switch" list "{" cases "}",
+    "if" expr "{" block "}",
+    "if" expr "{" block "}" "else" rule,
+    "while" expr "{" block "}",
+    "rule" "Ident" params "{" block "}",
+    "on" arg rule,
+    "actions" <flags:eflags> <name:"Ident"> <b:bindlist> <cmd:"ActionString"> => (),
+};
+
+assign: () = {
+    "=",
+    "+=",
+    "?=",
+    "default" "=",
+};
+
+Tier<Op,NextTier>: () = {
+    Tier<Op,NextTier> Op NextTier,
+    NextTier,
+};
+
+Tier1_Op: () = {
+    "|",
+    "||",
+    "&",
+    "&&",
+};
+
+Tier2_Op: () = {
+    "<",
+    "<=",
+    ">",
+    ">=",
+};
+
+Tier3_Op: () = {
+    "=",
+    "!=",
+};
+
+expr = Tier<Tier1_Op, expr2>;
+expr2 = Tier<Tier2_Op, expr3>;
+expr3 = Tier<Tier3_Op, expr4>;
+
+expr4: () = {
+    "!" term,
+    term,
+};
+
+term: () = {
+    arg,
+    "(" expr ")",
+};
+
+cases: () = {
+    (case cases)?,
+};
+
+case: () = {
+    "case" "Ident" ":" block,
+};
+
+pub params: Vec<Token> = {
+    <e:(<"Ident"> ":" <params>)?> => {
+        match e {
+            Some(e) => {
+                let mut rest = e.1;
+                rest.insert(0, Token::Ident(e.0));
+                rest
+            },
+            None => vec![]
+        }
+    },
+    "Ident" => vec![Token::Ident(<>)]
+};
+
+lol: () = {
+    list,
+    list ":" lol,
+};
+
+list: () = {
+    listp
+};
+
+listp: () = {
+    (listp arg)?,
+};
+
+arg: () = {
+    "Ident",
+    "[" func "]",
+};
+
+func: () = {
+    arg lol,
+    "on" arg arg lol,
+    "on" arg "return" list,
+};
+
+pub eflags: Vec<action::Flags> = {
+    <(<eflags> <eflag>)?> => {
+        match <> {
+            Some(t) => {
+                let mut flags = t.0;
+                flags.push(t.1);
+                flags
+            },
+            None => vec![]
+        }
+    }
+};
+
+eflag: action::Flags = {
+    "updated" => action::Flags::Updated,
+    "together" => action::Flags::Together,
+    "ignore" => action::Flags::Ignore,
+    "quietly" => action::Flags::Quietly,
+    "piecemeal" => action::Flags::Piecemeal,
+    "existing" => action::Flags::Existing,
+    "maxline" <"Ident"> => action::Flags::Maxline(u32::from_str(<>.as_str()).unwrap())
+};
+
+bindlist: () = {
+    ("bind" list)?,
+};
+
+extern {
+    type Location = usize;
+    type Error = LexerError;
+
+    enum Token {
+        "!" => Token::Bang,
+        "!=" => Token::BangEquals,
+        "&" => Token::Amper,
+        "&&" => Token::AmperAmper,
+        "(" => Token::LeftParen,
+        ")" => Token::RightParen,
+        "+=" => Token::PlusEquals,
+        ":" => Token::Colon,
+        ";" => Token::SemiColon,
+        "<" => Token::LeftAngle,
+        "<=" => Token::LeftAngleEquals,
+        "=" => Token::Equals,
+        ">" => Token::RightAngle,
+        ">=" => Token::RightAngleEquals,
+        "?=" => Token::QuestionEquals,
+        "[" => Token::LeftBrace,
+        "]" => Token::RightBrace,
+        "|" => Token::Bar,
+        "||" => Token::BarBar,
+        "{" => Token::LeftBracket,
+        "}" => Token::RightBracket,
+        "actions" => Token::Actions,
+        "ActionString" => Token::ActionString(<String>),
+        "bind" => Token::Bind,
+        "break" => Token::Break,
+        "case" => Token::Case,
+        "continue" => Token::Continue,
+        "default" => Token::Default,
+        "else" => Token::Else,
+        "existing" => Token::Existing,
+        "for" => Token::For,
+        "Ident" => Token::Ident(<String>),
+        "if" => Token::If,
+        "ignore" => Token::Ignore,
+        "in" => Token::In,
+        "include" => Token::Include,
+        "local" => Token::Local,
+        "maxline" => Token::Maxline,
+        "on" => Token::On,
+        "piecemeal" => Token::Piecemeal,
+        "quietly" => Token::Quietly,
+        "return" => Token::Return,
+        "rule" => Token::Rule,
+        "StringLiteral" => Token::StringLiteral(<String>),
+        "switch" => Token::Switch,
+        "together" => Token::Together,
+        "updated" => Token::Updated,
+        "while" => Token::While,
+    }
+}

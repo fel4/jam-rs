@@ -1,0 +1,13 @@
+/bin.*/
+*.exe
+*.obj
+*.o
+jam0
+target/
+**/*.rs.bk
+Cargo.lock
+
+# auto-generated from .lalrpop files.
+src/calculator1.rs
+src/lang/grammar.rs
+src/lang/grammar2.rs
